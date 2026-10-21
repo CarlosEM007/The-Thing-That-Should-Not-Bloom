@@ -5,6 +5,11 @@ public class PlantsTaskMB : MonoBehaviour, IInteractable
     [Header("State")]
     [SerializeField] private PlantsStateEnum plantState;
 
+    [Header("Reference")]
+    [SerializeField] private GrabbableToolsMB wateringCan;
+    [SerializeField] private GrabbableToolsMB sickle;
+    [SerializeField] private GrabbableToolsMB seeds;
+
     private string prompt;
 
     public string Prompt
@@ -13,7 +18,15 @@ public class PlantsTaskMB : MonoBehaviour, IInteractable
         set => prompt = value;
     }
 
-    public bool canInteract => ;
+    public bool canInteract => _canInteract;
+    private bool _canInteract;
+
+    private void OnEnable()
+    {
+        wateringCan.OnObjectGrabbed += ValidateInteraction;
+        sickle.OnObjectGrabbed += ValidateInteraction;
+        seeds.OnObjectGrabbed += ValidateInteraction;
+    }
 
     public void Interact()
     {
@@ -34,5 +47,28 @@ public class PlantsTaskMB : MonoBehaviour, IInteractable
                 prompt = "Harvest the plants";
                 return;
         }
+    }
+
+    private void ValidateInteraction(bool inHand, ToolType type)
+    {
+        bool validate = false;
+
+        switch (type)
+        {
+            case ToolType.Seed:
+                if (plantState == PlantsStateEnum.Seed && inHand)
+                    validate = true;
+                break;
+            case ToolType.Sickle:
+                if (plantState == PlantsStateEnum.Harvest && inHand)
+                    validate = true;
+                break;
+            case ToolType.Watering:
+                if (plantState == PlantsStateEnum.Water && inHand)
+                    validate = true;
+                break;
+        }
+
+        _canInteract = validate;
     }
 }
