@@ -34,7 +34,7 @@ public class PlayerInteractMB : MonoBehaviour
     {
         IInteractable newTarget = SearchTarget();
 
-        if (playerHand.IsOccupied && (newTarget == null || !newTarget.canInteract))
+        if (playerHand.IsOccupied && (newTarget == null || !newTarget.canInteract) && !playerHand.IsTool)
             newTarget = playerHand.GetInteractable();
 
         if (newTarget == currentTarget)

@@ -4,11 +4,15 @@ public class PlayerHandMB : MonoBehaviour
 {
     private AbstractGrabbableMB heldItem;
 
+    public bool IsTool = false;
+
     public bool IsOccupied => heldItem != null;
 
-    public void Grab(AbstractGrabbableMB prefab)
+    public void Grab(AbstractGrabbableMB prefab, bool isTool = false)
     {
         if (IsOccupied) return;
+
+        IsTool = isTool;
 
         heldItem = Instantiate(prefab, transform);
         heldItem.transform.localPosition = Vector3.zero;
@@ -23,7 +27,10 @@ public class PlayerHandMB : MonoBehaviour
         if (!IsOccupied || !heldItem.canInteract) return;
 
         heldItem.Interact();
-        Destroy(heldItem.gameObject);
+
+        if(!IsTool)
+            Destroy(heldItem.gameObject);
+
         heldItem = null;
     }
 

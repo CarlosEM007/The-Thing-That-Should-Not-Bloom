@@ -2,7 +2,8 @@ using UnityEngine;
 
 public class AbstractGrabbableMB : MonoBehaviour, IInteractable
 {
-    protected string prompt;
+    [Header("Input")]
+    [SerializeField] protected string prompt;
 
     public virtual string Prompt
     {

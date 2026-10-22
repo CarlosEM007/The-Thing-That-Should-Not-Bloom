@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 public class PlantsTaskMB : MonoBehaviour, IInteractable
@@ -6,9 +7,11 @@ public class PlantsTaskMB : MonoBehaviour, IInteractable
     [SerializeField] private PlantsStateEnum plantState;
 
     [Header("Reference")]
-    [SerializeField] private GrabbableToolsMB wateringCan;
-    [SerializeField] private GrabbableToolsMB sickle;
-    [SerializeField] private GrabbableToolsMB seeds;
+    [SerializeField] private AbstractGrabbableToolsMB wateringCan;
+    [SerializeField] private AbstractGrabbableToolsMB sickle;
+    [SerializeField] private AbstractGrabbableToolsMB seeds;
+
+    public Action<PlantsStateEnum> taskDoneEvent;
 
     private string prompt;
 
@@ -28,9 +31,24 @@ public class PlantsTaskMB : MonoBehaviour, IInteractable
         seeds.OnObjectGrabbed += ValidateInteraction;
     }
 
+    private void OnDisable()
+    {
+        wateringCan.OnObjectGrabbed -= ValidateInteraction;
+        sickle.OnObjectGrabbed -= ValidateInteraction;
+        seeds.OnObjectGrabbed -= ValidateInteraction;
+    }
+
+    private void Start()
+    {
+        StateChanges();
+    }
+
     public void Interact()
     {
-        throw new System.NotImplementedException();
+        taskDoneEvent?.Invoke(plantState);
+        NextStage();
+
+        _canInteract = false;
     }
 
     private void StateChanges()
@@ -46,6 +64,9 @@ public class PlantsTaskMB : MonoBehaviour, IInteractable
             case PlantsStateEnum.Harvest:
                 prompt = "Harvest the plants";
                 return;
+            case PlantsStateEnum.Done:
+                prompt = "Just await!";
+                return;
         }
     }
 
@@ -53,22 +74,46 @@ public class PlantsTaskMB : MonoBehaviour, IInteractable
     {
         bool validate = false;
 
+        if (!inHand)
+        {
+            _canInteract = validate;
+            return;
+        }
+
         switch (type)
         {
             case ToolType.Seed:
-                if (plantState == PlantsStateEnum.Seed && inHand)
+                if (plantState == PlantsStateEnum.Seed)
                     validate = true;
                 break;
             case ToolType.Sickle:
-                if (plantState == PlantsStateEnum.Harvest && inHand)
+                if (plantState == PlantsStateEnum.Harvest)
                     validate = true;
                 break;
             case ToolType.Watering:
-                if (plantState == PlantsStateEnum.Water && inHand)
+                if (plantState == PlantsStateEnum.Water)
                     validate = true;
                 break;
         }
 
         _canInteract = validate;
+    }
+
+    private void NextStage()
+    {
+        switch (plantState)
+        {
+            case PlantsStateEnum.Seed:
+                plantState = PlantsStateEnum.Water;
+                break;
+            case PlantsStateEnum.Water:
+                plantState = PlantsStateEnum.Done;
+                break;
+            case PlantsStateEnum.Harvest:
+                plantState = PlantsStateEnum.Seed;
+                break;
+        }
+
+        StateChanges();
     }
 }
